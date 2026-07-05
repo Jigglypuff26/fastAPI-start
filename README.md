@@ -23,7 +23,10 @@ fastApi/
 │   └── test_root.py       # тесты на эндпоинты
 ├── venv/                  # виртуальное окружение (в git не попадает)
 ├── requirements.txt       # зависимости для запуска
-├── requirements-dev.txt   # зависимости для разработки (тесты и т.д.)
+├── requirements-dev.txt   # зависимости для разработки (тесты, линтинг и т.д.)
+├── pyproject.toml         # настройки Black и mypy
+├── .flake8                # настройки Flake8
+├── .pre-commit-config.yaml # хуки: black, flake8, mypy и базовые проверки
 ├── .env.example           # пример файла с переменными окружения
 ├── Dockerfile
 ├── .dockerignore
@@ -90,6 +93,50 @@ Get-NetTCPConnection -LocalPort 8000 -State Listen | Select-Object -ExpandProper
 
 ```powershell
 pytest
+```
+
+## Форматирование и линтинг
+
+Форматирование кода — [Black](https://black.readthedocs.io/), линтинг — [Flake8](https://flake8.pycqa.org/) (настройки в `pyproject.toml` и `.flake8`).
+
+Проверить форматирование без изменения файлов:
+
+```powershell
+black --check .
+```
+
+Отформатировать код:
+
+```powershell
+black .
+```
+
+Проверить линтинг:
+
+```powershell
+flake8
+```
+
+Проверить типизацию — [mypy](https://mypy-lang.org/) в строгом режиме (настройки в `pyproject.toml`):
+
+```powershell
+mypy app
+```
+
+### Pre-commit hooks
+
+Black, Flake8, mypy и базовые проверки (trailing whitespace, конфликты слияния и т.д.) запускаются автоматически перед каждым коммитом через [pre-commit](https://pre-commit.com/) (настройки в `.pre-commit-config.yaml`).
+
+Установить хуки (один раз после клонирования репозитория):
+
+```powershell
+pre-commit install
+```
+
+Прогнать все хуки по всем файлам вручную:
+
+```powershell
+pre-commit run --all-files
 ```
 
 ## Эндпоинты

@@ -1,0 +1,37 @@
+repos:
+  # Набор базовых проверок файлов (не связаны с Python-кодом напрямую)
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace   # убирает пробелы в конце строк
+      - id: end-of-file-fixer     # гарантирует, что файл заканчивается одной пустой строкой
+      - id: check-yaml            # проверяет, что YAML-файлы валидны (синтаксис)
+      - id: check-toml            # проверяет, что TOML-файлы валидны (например, pyproject.toml)
+      - id: check-added-large-files  # не даёт закоммитить случайно большие файлы (бинарники, дампы и т.д.)
+      - id: check-merge-conflict  # не даёт закоммитить файлы с неразрешёнными маркерами конфликтов (<<<<<<<)
+
+  # Black — автоформатирование кода (единый стиль без споров о запятых/кавычках)
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
+    hooks:
+      - id: black   # настройки берутся из pyproject.toml -> [tool.black]
+
+  # Flake8 — линтер: ищет неиспользуемые импорты, недостижимый код, опечатки и т.п.
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8   # настройки берутся из .flake8
+
+  # mypy — статическая проверка типов (ловит ошибки типов до запуска кода)
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+      - id: mypy
+        # mypy запускается в изолированном окружении хука, поэтому пакеты проекта
+        # нужно продублировать здесь — иначе mypy не увидит их типы (import-not-found)
+        additional_dependencies: [fastapi, pydantic, pydantic-settings]
+        # не передавать хуку измененные файлы поштучно — вместо этого используем args ниже.
+        # Это нужно, чтобы mypy анализировал весь пакет app целиком (видел все зависимости
+        # между модулями), а не только изменённые файлы по отдельности
+        pass_filenames: false
+        args: ["app"]   # какую папку проверять (настройки самого mypy — в pyproject.toml -> [tool.mypy])
