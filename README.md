@@ -24,6 +24,10 @@ fastApi/
 ├── venv/                  # виртуальное окружение (в git не попадает)
 ├── requirements.txt       # зависимости для запуска
 ├── requirements-dev.txt   # зависимости для разработки (тесты, линтинг и т.д.)
+├── scripts/
+│   └── lint.py            # одной командой: Black + Flake8 + mypy
+├── docs/
+│   └── security.md        # что настроено по безопасности и где в коде
 ├── pyproject.toml         # настройки Black и mypy
 ├── .flake8                # настройки Flake8
 ├── .pre-commit-config.yaml # хуки: black, flake8, mypy и базовые проверки
@@ -99,6 +103,12 @@ pytest
 
 Форматирование кода — [Black](https://black.readthedocs.io/), линтинг — [Flake8](https://flake8.pycqa.org/) (настройки в `pyproject.toml` и `.flake8`).
 
+Запустить форматирование и все проверки (Black, Flake8, mypy) одной командой:
+
+```powershell
+python scripts/lint.py
+```
+
 Проверить форматирование без изменения файлов:
 
 ```powershell
@@ -138,6 +148,10 @@ pre-commit install
 ```powershell
 pre-commit run --all-files
 ```
+
+## Безопасность
+
+Обзор настроенных мер базовой безопасности (CORS, security-заголовки, скрытие Swagger в продакшене, TrustedHost, rate limiting) и того, где они находятся в коде — в [docs/security.md](docs/security.md).
 
 ## Эндпоинты
 
