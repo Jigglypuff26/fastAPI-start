@@ -8,7 +8,8 @@ from slowapi.errors import RateLimitExceeded
 from app.core.config import settings
 from app.core.limiter import limiter
 from app.core.security_headers import SecurityHeadersMiddleware
-from app.routers import root
+from app.routers.http import root
+from app.routers.ws import echo
 
 app = FastAPI(
     title=settings.app_name,
@@ -42,3 +43,4 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 
 
 app.include_router(root.router)
+app.include_router(echo.router)

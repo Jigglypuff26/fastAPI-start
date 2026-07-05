@@ -1,0 +1,62 @@
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi.responses import HTMLResponse
+
+from app.core.config import settings
+
+router = APIRouter()
+ROOT_PATH = "/ws"
+
+
+@router.websocket(ROOT_PATH)
+async def websocket_echo(websocket: WebSocket) -> None:
+    await websocket.accept()
+    try:
+        while True:
+            message = await websocket.receive_text()
+            await websocket.send_text(message)
+    except WebSocketDisconnect:
+        pass
+
+
+_WS_TEST_PAGE = """
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <title>WS echo demo</title>
+</head>
+<body>
+    <h1>WebSocket echo demo</h1>
+    <form onsubmit="sendMessage(event)">
+        <input type="text" id="messageInput" autocomplete="off"/>
+        <button type="submit">Send</button>
+    </form>
+    <ul id="messages"></ul>
+    <script>
+        const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+        const ws = new WebSocket(`${proto}//${window.location.host}/ws`);
+
+        ws.onmessage = (event) => {
+            const messages = document.getElementById("messages");
+            const item = document.createElement("li");
+            item.textContent = event.data;
+            messages.appendChild(item);
+        };
+
+        function sendMessage(event) {
+            event.preventDefault();
+            const input = document.getElementById("messageInput");
+            ws.send(input.value);
+            input.value = "";
+        }
+    </script>
+</body>
+</html>
+"""
+
+
+if settings.debug:
+
+    @router.get(f"{ROOT_PATH}/test", response_class=HTMLResponse)
+    def websocket_test_page() -> str:
+        return _WS_TEST_PAGE
