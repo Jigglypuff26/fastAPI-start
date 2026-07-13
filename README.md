@@ -27,12 +27,17 @@ fastApi/
 ├── scripts/
 │   └── lint.py            # одной командой: Black + Flake8 + mypy
 ├── docs/
-│   └── security.md        # что настроено по безопасности и где в коде
+│   ├── security.md        # что настроено по безопасности и где в коде
+│   └── docker.md          # настройка и запуск проекта в Docker (prod/dev)
 ├── pyproject.toml         # настройки Black и mypy
 ├── .flake8                # настройки Flake8
 ├── .pre-commit-config.yaml # хуки: black, flake8, mypy и базовые проверки
 ├── .env.example           # пример файла с переменными окружения
-├── Dockerfile
+├── docker/
+│   ├── Dockerfile.prod          # prod-образ: non-root, без reload
+│   ├── Dockerfile.dev           # dev-образ: reload, dev-зависимости
+│   ├── docker-compose.yml       # prod-стек
+│   └── docker-compose.dev.yml   # dev-оверрайд (volume, DEBUG=true)
 ├── .dockerignore
 ├── .gitignore
 └── README.md
@@ -78,10 +83,7 @@ uvicorn app.main:app --reload
 
 ### Запуск через Docker
 
-```powershell
-docker build -t fastapi-project .
-docker run -p 8000:8000 fastapi-project
-```
+Настройка и запуск в Docker (prod и dev) — в [docs/docker.md](docs/docker.md).
 
 ## Остановка проекта
 
