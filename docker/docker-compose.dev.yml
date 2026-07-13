@@ -1,0 +1,12 @@
+name: fastapi
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    container_name: fastapi-project-dev
+    volumes:
+      - ..:/code
+    environment:
+      - DEBUG=true
