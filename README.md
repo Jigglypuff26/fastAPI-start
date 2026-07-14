@@ -13,14 +13,24 @@ fastApi/
 │   ├── main.py            # создание приложения, CORS, обработка ошибок, подключение роутеров
 │   ├── core/
 │   │   ├── __init__.py
-│   │   ├── config.py      # настройки приложения (Pydantic Settings, .env)
-│   │   └── env.py         # ensure_env_file — создание .env из .env.example
+│   │   ├── config.py            # настройки приложения (Pydantic Settings, .env)
+│   │   ├── env.py               # ensure_env_file — создание .env из .env.example
+│   │   ├── limiter.py           # rate limiting (slowapi)
+│   │   ├── security_headers.py  # middleware с security-заголовками
+│   │   └── db.py                # проверка подключения к PostgreSQL
 │   └── routers/
 │       ├── __init__.py
-│       └── root.py        # роутер с эндпоинтом /
+│       ├── http/
+│       │   ├── __init__.py
+│       │   ├── root.py    # роутер с эндпоинтом /
+│       │   └── postgre.py # роутер с эндпоинтом /postgre-check
+│       └── ws/
+│           ├── __init__.py
+│           └── echo.py    # WebSocket-эхо на /ws
 ├── tests/
 │   ├── __init__.py
-│   └── test_root.py       # тесты на эндпоинты
+│   ├── test_root.py       # тесты на GET /
+│   └── test_ws_echo.py    # тесты на WebSocket /ws
 ├── venv/                  # виртуальное окружение (в git не попадает)
 ├── requirements.txt       # зависимости для запуска
 ├── requirements-dev.txt   # зависимости для разработки (тесты, линтинг и т.д.)
@@ -28,7 +38,8 @@ fastApi/
 │   └── lint.py            # одной командой: Black + Flake8 + mypy
 ├── docs/
 │   ├── security.md        # что настроено по безопасности и где в коде
-│   └── docker.md          # настройка и запуск проекта в Docker (prod/dev)
+│   ├── docker.md          # настройка и запуск проекта в Docker (prod/dev)
+│   └── database.md        # подключение к PostgreSQL и /postgre-check
 ├── pyproject.toml         # настройки Black и mypy
 ├── .flake8                # настройки Flake8
 ├── .pre-commit-config.yaml # хуки: black, flake8, mypy и базовые проверки
@@ -155,6 +166,10 @@ pre-commit run --all-files
 
 Обзор настроенных мер базовой безопасности (CORS, security-заголовки, скрытие Swagger в продакшене, TrustedHost, rate limiting) и того, где они находятся в коде — в [docs/security.md](docs/security.md).
 
+## База данных
+
+Переменные окружения для подключения к PostgreSQL, эндпоинт `/postgre-check` и диагностика — в [docs/database.md](docs/database.md).
+
 ## Эндпоинты
 
 ### `GET /`
@@ -169,9 +184,25 @@ pre-commit run --all-files
 }
 ```
 
+### `GET /postgre-check`
+
+Проверяет подключение к PostgreSQL. Подробности — в [docs/database.md](docs/database.md).
+
+**Ответ:**
+
+```json
+{
+  "message": "подключен к базе"
+}
+```
+
+### `WS /ws`
+
+WebSocket-эхо: отправленное сообщение возвращается обратно тем же текстом. При `DEBUG=true` доступна тестовая HTML-страница на `GET /ws/test`.
+
 ## Как добавить новый эндпоинт
 
-1. Создайте роутер в `app/routers/` (или добавьте эндпоинт в существующий файл роутера), например `app/routers/items.py`:
+1. Создайте роутер в `app/routers/http/` (для HTTP) или `app/routers/ws/` (для WebSocket), например `app/routers/http/items.py`:
 
    ```python
    from fastapi import APIRouter
@@ -187,10 +218,12 @@ pre-commit run --all-files
 2. Подключите роутер в `app/main.py`:
 
    ```python
-   from app.routers import items
+   from app.routers.http import items
 
    app.include_router(items.router)
    ```
+
+   Если у эндпоинта нужен rate limiting — навесьте `@limiter.limit(settings.rate_limit)` явно (см. [docs/security.md](docs/security.md) про особенности `SlowAPIMiddleware` в этом проекте).
 
 3. Добавьте тесты в `tests/` (по аналогии с `tests/test_root.py`), например `tests/test_items.py`:
 

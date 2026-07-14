@@ -47,6 +47,12 @@ docker run -p 8000:8000 --env-file .env fastapi-project
 
 Если файл `.env` отсутствует, приложение при старте само создаст его из `.env.example` (см. [app/core/env.py](../app/core/env.py)). В `docker-compose.yml`/`docker-compose.dev.yml` `.env` подключён как `env_file` и необязателен (`required: false`) — при его отсутствии применяются значения по умолчанию из кода/образа.
 
+### Подключение к Postgres на хосте
+
+`DB_HOST` в `.env` обычно указывает на `localhost` для запуска приложения напрямую (без Docker). Внутри контейнера `localhost` — это сам контейнер, а не хост-машина, поэтому `docker-compose.yml` переопределяет `DB_HOST=host.docker.internal` в секции `environment` (переопределяет значение из `env_file`). На Linux-хостах для работы `host.docker.internal` может дополнительно понадобиться `extra_hosts: ["host.docker.internal:host-gateway"]`.
+
+Подробнее про переменные подключения и диагностику — в [docs/database.md](database.md).
+
 ## Остановка
 
 ```powershell
