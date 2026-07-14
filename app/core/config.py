@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     # "testserver" is the fixed Host Starlette's TestClient sends; needed so
     # TrustedHostMiddleware doesn't reject requests made by the test suite.
     allowed_hosts: list[str] = ["localhost", "127.0.0.1", "testserver"]
+    # IP-адреса или подсети (CIDR), которым разрешён доступ. Пустой список —
+    # ограничение отключено (доступ разрешён всем).
+    allowed_ips: list[str] = []
     rate_limit: str = "100/minute"
     db_enabled: bool = True
     db_host: str = "localhost"

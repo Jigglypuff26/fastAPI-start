@@ -17,6 +17,7 @@ fastApi/
 │   │   ├── env.py               # ensure_env_file — создание .env из .env.example
 │   │   ├── limiter.py           # rate limiting (slowapi)
 │   │   ├── security_headers.py  # middleware с security-заголовками
+│   │   ├── ip_allowlist.py      # middleware: ограничение доступа по IP (ALLOWED_IPS)
 │   │   ├── db.py                # проверка подключения к PostgreSQL
 │   │   └── redis_client.py      # проверка подключения к Redis
 │   └── routers/
@@ -168,7 +169,7 @@ pre-commit run --all-files
 
 ## 🔒 Безопасность
 
-Обзор настроенных мер базовой безопасности (CORS, security-заголовки, скрытие Swagger в продакшене, TrustedHost, rate limiting) и того, где они находятся в коде — в [docs/security.md](docs/security.md).
+Обзор настроенных мер базовой безопасности (CORS, security-заголовки, скрытие Swagger в продакшене, TrustedHost, IP allowlist, rate limiting) и того, где они находятся в коде — в [docs/security.md](docs/security.md).
 
 ## 🗄️ База данных
 

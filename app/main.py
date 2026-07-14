@@ -6,6 +6,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from app.core.config import settings
+from app.core.ip_allowlist import IPAllowlistMiddleware
 from app.core.limiter import limiter
 from app.core.security_headers import SecurityHeadersMiddleware
 from app.routers.http import postgre, redis, root
@@ -24,8 +25,9 @@ app.add_exception_handler(
     RateLimitExceeded, _rate_limit_exceeded_handler  # type: ignore[arg-type]
 )
 
-# Middleware runs in reverse order of registration, so TrustedHostMiddleware
-# (added last) rejects bad Host headers before any other work happens.
+# Middleware runs in reverse order of registration, so IPAllowlistMiddleware
+# and TrustedHostMiddleware (added last) reject bad requests before any other
+# work happens.
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
@@ -35,6 +37,7 @@ app.add_middleware(
     allow_headers=settings.cors_headers,
 )
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts)
+app.add_middleware(IPAllowlistMiddleware, allowed_ips=settings.allowed_ips)
 
 
 @app.exception_handler(Exception)
