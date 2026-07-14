@@ -1,4 +1,4 @@
-# Docker
+# 🐳 Docker
 
 Настройка и запуск проекта в Docker — отдельно для prod и для разработки.
 
@@ -12,7 +12,7 @@
 
 Все команды ниже выполняются из корня проекта — контекст сборки в compose-файлах указывает на корень (`context: ..`).
 
-## Prod
+## 🏭 Prod
 
 Код запечён в образ на этапе сборки, контейнер работает от непривилегированного пользователя, reload отключён:
 
@@ -20,7 +20,7 @@
 docker compose -f docker/docker-compose.yml up --build
 ```
 
-## Dev
+## 🛠️ Dev
 
 Код монтируется volume'ом с хоста, `uvicorn --reload` подхватывает изменения на лету без пересборки образа:
 
@@ -35,7 +35,7 @@ docker compose -f docker/docker-compose.yml -f docker/docker-compose.dev.yml run
 docker compose -f docker/docker-compose.yml -f docker/docker-compose.dev.yml run --rm api python scripts/lint.py
 ```
 
-## Без compose
+## 📦 Без compose
 
 Напрямую через Docker, без compose (только prod-образ):
 
@@ -44,9 +44,9 @@ docker build -f docker/Dockerfile.prod -t fastapi-project .
 docker run -p 8000:8000 --env-file .env fastapi-project
 ```
 
-## Переменные окружения
+## ⚙️ Переменные окружения
 
-Если файл `.env` отсутствует, приложение при старте само создаст его из `.env.example` (см. [app/core/env.py](../app/core/env.py)). В `docker-compose.yml`/`docker-compose.dev.yml` `.env` подключён как `env_file` и необязателен (`required: false`) — при его отсутствии применяются значения по умолчанию из кода/образа.
+Если файл `.env` отсутствует, приложение при старте само создаст его из `.env.example` (см. [app/core/env.py](../app/core/env.py)). `.env` подключён как `env_file` в базовом `docker-compose.yml` и необязателен (`required: false`) — оверрайды (`docker-compose.dev.yml`, `docker-compose.redis.yml`) наследуют его автоматически. При отсутствии `.env` применяются значения по умолчанию из кода/образа.
 
 ### Подключение к Postgres на хосте
 
@@ -74,7 +74,7 @@ docker compose -f docker/docker-compose.yml -f docker/docker-compose.dev.yml -f 
 
 Подробнее про переменные подключения и диагностику — в [docs/redis.md](redis.md).
 
-## Остановка
+## ⏹️ Остановка
 
 ```powershell
 docker compose -f docker/docker-compose.yml down

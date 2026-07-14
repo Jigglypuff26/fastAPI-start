@@ -1,8 +1,8 @@
-# База данных (PostgreSQL)
+# 🗄️ База данных (PostgreSQL)
 
 Подключение к PostgreSQL, переменные окружения и проверка соединения.
 
-## Переменные окружения
+## ⚙️ Переменные окружения
 
 Строка подключения собирается в [app/core/config.py](../app/core/config.py) (свойство `database_url`) из отдельных переменных `.env`:
 
@@ -17,7 +17,7 @@
 
 Значения по умолчанию (для локальной разработки) заданы в [.env.example](../.env.example). Реальные значения — в `.env`, который не попадает в git (см. [docs/security.md](security.md#секреты-и-env)).
 
-## Проверка подключения
+## ✅ Проверка подключения
 
 Эндпоинт `GET /postgre-check` пытается подключиться к базе и выполнить `SELECT 1`:
 
@@ -30,7 +30,7 @@
 - [app/core/db.py](../app/core/db.py) — `check_postgres_connection()`, подключается через [asyncpg](https://github.com/MagicStack/asyncpg) с таймаутом 3 секунды, любую ошибку подключения превращает в `False`.
 - [app/routers/http/postgre.py](../app/routers/http/postgre.py) — сам роут.
 
-## Запуск без Docker
+## 💻 Запуск без Docker
 
 Если PostgreSQL установлен на хост-машине и слушает `localhost:5432`, значения по умолчанию в `.env` (`DB_HOST=localhost`) работают без изменений:
 
@@ -39,13 +39,13 @@ uvicorn app.main:app --reload
 curl http://127.0.0.1:8000/postgre-check
 ```
 
-## Запуск в Docker
+## 🐳 Запуск в Docker
 
 Внутри контейнера `localhost` указывает на сам контейнер, а не на хост-машину, поэтому для БД, поднятой на хосте, `docker-compose.yml` переопределяет `DB_HOST=host.docker.internal` — подробности в [docs/docker.md](docker.md#подключение-к-postgres-на-хосте).
 
 Если вместо этого Postgres запускается как отдельный сервис в том же compose-стеке, `DB_HOST` нужно указать равным имени этого сервиса (например, `db`), а `host.docker.internal`-оверрайд в `docker-compose.yml` — убрать.
 
-## Диагностика
+## 🔍 Диагностика
 
 Если `/postgre-check` возвращает «не подключен к базе»:
 
