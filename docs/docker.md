@@ -6,8 +6,9 @@
 
 - [Dockerfile.prod](../docker/Dockerfile.prod) — prod-образ: код запечён в образ, запуск от непривилегированного пользователя (`appuser`), без reload.
 - [Dockerfile.dev](../docker/Dockerfile.dev) — dev-образ: добавлены dev-зависимости (`requirements-dev.txt`) для тестов и линтинга, `uvicorn` запускается с `--reload`.
-- [docker-compose.yml](../docker/docker-compose.yml) — prod-стек (healthcheck, `restart: unless-stopped`).
+- [docker-compose.yml](../docker/docker-compose.yml) — prod-стек (healthcheck, `restart: unless-stopped`). Без Redis.
 - [docker-compose.dev.yml](../docker/docker-compose.dev.yml) — dev-оверрайд поверх prod-стека: код монтируется volume'ом с хоста, `DEBUG=true`.
+- [docker-compose.redis.yml](../docker/docker-compose.redis.yml) — опциональный оверрайд, добавляющий сервис `redis`. Подключается только при необходимости (см. раздел [Redis](#redis) ниже) — без него контейнер Redis не создаётся вовсе.
 
 Все команды ниже выполняются из корня проекта — контекст сборки в compose-файлах указывает на корень (`context: ..`).
 
@@ -55,7 +56,21 @@ docker run -p 8000:8000 --env-file .env fastapi-project
 
 ### Redis
 
-В отличие от Postgres, Redis поднимается прямо в `docker-compose.yml` как сервис `redis` (образ `redis:7-alpine`, данные — в volume `redis-data`, порт `6379` проброшен на хост). Сервис `api` подключается к нему по имени сервиса — `REDIS_HOST=redis` переопределяется в секции `environment` (аналогично `DB_HOST`), и стартует только после того, как у `redis` пройдёт healthcheck (`depends_on: redis: condition: service_healthy`).
+Redis — опциональный сервис и в базовый `docker-compose.yml` не входит: если он не нужен, `docker compose up` не создаёт для него контейнер вообще. Чтобы поднять Redis вместе с приложением, подключите оверрайд [docker-compose.redis.yml](../docker/docker-compose.redis.yml):
+
+```powershell
+docker compose -f docker/docker-compose.yml -f docker/docker-compose.redis.yml up --build
+```
+
+Этот файл добавляет сервис `redis` (образ `redis:7-alpine`, данные — в volume `redis-data`, порт `6379` проброшен на хост) и переопределяет для `api` `REDIS_HOST=redis` (сервис доступен по имени во внутренней docker-сети, аналогично `DB_HOST` для Postgres) плюс `depends_on: redis: condition: service_healthy`, чтобы `api` стартовал только после готовности Redis.
+
+Флаг `REDIS_ENABLED` в `.env` — независимая настройка уровня приложения: он определяет, пытается ли сам код подключаться к Redis (см. [docs/redis.md](redis.md#переменные-окружения)), а не поднимается ли контейнер. Обычно оба значения синхронизируют вручную: `REDIS_ENABLED=true` в `.env` + подключённый `docker-compose.redis.yml`, либо `REDIS_ENABLED=false` без него.
+
+Комбинируется с dev-оверрайдом:
+
+```powershell
+docker compose -f docker/docker-compose.yml -f docker/docker-compose.dev.yml -f docker/docker-compose.redis.yml up --build
+```
 
 Подробнее про переменные подключения и диагностику — в [docs/redis.md](redis.md).
 
@@ -65,4 +80,4 @@ docker run -p 8000:8000 --env-file .env fastapi-project
 docker compose -f docker/docker-compose.yml down
 ```
 
-Для dev-стека — та же команда с добавлением `-f docker/docker-compose.dev.yml`.
+Для dev-стека и/или Redis — та же команда с добавлением `-f docker/docker-compose.dev.yml` и/или `-f docker/docker-compose.redis.yml` (важно указать те же `-f`, что и при `up`, иначе Compose не увидит часть сервисов).

@@ -11,6 +11,8 @@ ROOT_PATH = "/redis-check"
 @router.get(ROOT_PATH)
 @limiter.limit(settings.rate_limit)
 async def redis_check(request: Request) -> dict[str, str]:
+    if not settings.redis_enabled:
+        return {"message": "проверка отключена (REDIS_ENABLED=false)"}
     if await check_redis_connection():
         return {"message": "подключен к redis"}
     return {"message": "не подключен к redis"}

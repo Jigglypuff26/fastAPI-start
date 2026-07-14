@@ -50,8 +50,9 @@ fastApi/
 ├── docker/
 │   ├── Dockerfile.prod          # prod-образ: non-root, без reload
 │   ├── Dockerfile.dev           # dev-образ: reload, dev-зависимости
-│   ├── docker-compose.yml       # prod-стек
-│   └── docker-compose.dev.yml   # dev-оверрайд (volume, DEBUG=true)
+│   ├── docker-compose.yml       # prod-стек (без Redis)
+│   ├── docker-compose.dev.yml   # dev-оверрайд (volume, DEBUG=true)
+│   └── docker-compose.redis.yml # опциональный оверрайд: поднимает сервис redis
 ├── .dockerignore
 ├── .gitignore
 └── README.md

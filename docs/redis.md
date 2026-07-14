@@ -8,6 +8,7 @@
 
 | Переменная       | Описание                                             | Пример      |
 | ---------------- | ----------------------------------------------------- | ----------- |
+| `REDIS_ENABLED`  | Включает/выключает подключение к Redis                | `true`      |
 | `REDIS_HOST`     | Хост Redis                                            | `localhost` |
 | `REDIS_PORT`     | Порт Redis                                            | `6379`      |
 | `REDIS_PASSWORD` | Пароль (пусто — без аутентификации)                   | —           |
@@ -21,6 +22,7 @@
 
 - `{"message": "подключен к redis"}` — соединение установлено.
 - `{"message": "не подключен к redis"}` — соединение не удалось (неверные креды, Redis недоступен и т.п.).
+- `{"message": "проверка отключена (REDIS_ENABLED=false)"}` — `REDIS_ENABLED=false` в `.env`, попытка подключения не выполняется вовсе.
 
 Реализация:
 
@@ -29,13 +31,15 @@
 
 ## Запуск Redis через Docker
 
-Redis поднимается как отдельный сервис `redis` в [docker/docker-compose.yml](../docker/docker-compose.yml) (образ `redis:7-alpine`, данные сохраняются в volume `redis-data`, порт `6379` проброшен на хост):
+Redis — опциональный сервис: базовый [docker/docker-compose.yml](../docker/docker-compose.yml) его не содержит, поэтому обычный `docker compose up` контейнер Redis не создаёт. Чтобы поднять Redis вместе с приложением, подключите оверрайд [docker/docker-compose.redis.yml](../docker/docker-compose.redis.yml) (образ `redis:7-alpine`, данные сохраняются в volume `redis-data`, порт `6379` проброшен на хост):
 
 ```powershell
-docker compose -f docker/docker-compose.yml up --build
+docker compose -f docker/docker-compose.yml -f docker/docker-compose.redis.yml up --build
 ```
 
-При таком запуске сервис `api` обращается к Redis по имени сервиса — `REDIS_HOST=redis` переопределяется в `environment` секции `api` в `docker-compose.yml` (аналогично тому, как `DB_HOST` переопределяется для Postgres, см. [docs/database.md](database.md)).
+При таком запуске сервис `api` обращается к Redis по имени сервиса — `docker-compose.redis.yml` переопределяет `REDIS_HOST=redis` для `api` (аналогично тому, как `DB_HOST` переопределяется для Postgres, см. [docs/database.md](database.md)) и ждёт, пока Redis не станет healthy.
+
+Подробнее о том, почему Redis вынесен в отдельный compose-файл, — в [docs/docker.md](docker.md#redis).
 
 ## Запуск без Docker
 
@@ -51,6 +55,6 @@ curl http://127.0.0.1:8000/redis-check
 
 Если `/redis-check` возвращает «не подключен к redis»:
 
-1. Проверить, что контейнер `redis` запущен и здоров: `docker compose -f docker/docker-compose.yml ps`.
+1. Проверить, что контейнер `redis` вообще поднят и здоров: `docker compose -f docker/docker-compose.yml -f docker/docker-compose.redis.yml ps` (без `-f docker-compose.redis.yml` контейнер не создаётся вовсе).
 2. Проверить `REDIS_HOST`/`REDIS_PORT`/`REDIS_PASSWORD`/`REDIS_DB` в `.env`.
 3. Если приложение запущено вне Docker, а Redis — внутри (или наоборот) — учесть, что `localhost` внутри контейнера указывает на сам контейнер, а не на хост-машину.

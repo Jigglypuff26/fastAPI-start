@@ -15,11 +15,13 @@ class Settings(BaseSettings):
     # TrustedHostMiddleware doesn't reject requests made by the test suite.
     allowed_hosts: list[str] = ["localhost", "127.0.0.1", "testserver"]
     rate_limit: str = "100/minute"
+    db_enabled: bool = True
     db_host: str = "localhost"
     db_port: int = 5432
     db_username: str = "postgres"
     db_password: str = "postgres"
     db_name: str = "postgres"
+    redis_enabled: bool = True
     redis_host: str = "localhost"
     redis_port: int = 6379
     redis_password: str = ""
