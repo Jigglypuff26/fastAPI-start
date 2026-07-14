@@ -69,7 +69,7 @@ curl http://127.0.0.1:8000/postgre-check
 
 Внутри контейнера `localhost` указывает на сам контейнер, а не на хост-машину, поэтому для БД, поднятой на хосте, `docker-compose.yml` переопределяет `DB_HOST=host.docker.internal` — подробности в [docs/docker.md](docker.md#подключение-к-postgres-на-хосте).
 
-Если вместо этого Postgres запускается как отдельный сервис в том же compose-стеке, `DB_HOST` нужно указать равным имени этого сервиса (например, `db`), а `host.docker.internal`-оверрайд в `docker-compose.yml` — убрать.
+Если вместо этого Postgres должен запускаться как отдельный сервис в том же compose-стеке — подключите оверрайд [docker/docker-compose.postgres.yml](../docker/docker-compose.postgres.yml) (см. [docs/docker.md](docker.md#postgres)), он сам переопределяет `DB_HOST=db`.
 
 ## 🔍 Диагностика
 

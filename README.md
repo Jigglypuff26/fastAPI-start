@@ -36,6 +36,7 @@ fastApi/
 ├── tests/
 │   ├── __init__.py
 │   ├── test_root.py       # тесты на GET /
+│   ├── test_rate_limit.py # тесты на rate limiting (slowapi, 429 при превышении)
 │   └── test_ws_echo.py    # тесты на WebSocket /ws
 ├── venv/                  # виртуальное окружение (в git не попадает)
 ├── requirements.txt       # зависимости для запуска
@@ -58,9 +59,10 @@ fastApi/
 ├── docker/
 │   ├── Dockerfile.prod          # prod-образ: non-root, без reload
 │   ├── Dockerfile.dev           # dev-образ: reload, dev-зависимости
-│   ├── docker-compose.yml       # prod-стек (без Redis)
-│   ├── docker-compose.dev.yml   # dev-оверрайд (volume, DEBUG=true)
-│   └── docker-compose.redis.yml # опциональный оверрайд: поднимает сервис redis
+│   ├── docker-compose.yml          # prod-стек (без Postgres и Redis)
+│   ├── docker-compose.dev.yml      # dev-оверрайд (volume, DEBUG=true)
+│   ├── docker-compose.postgres.yml # опциональный оверрайд: поднимает сервис db (Postgres)
+│   └── docker-compose.redis.yml    # опциональный оверрайд: поднимает сервис redis
 ├── .dockerignore
 ├── .gitignore
 └── README.md
