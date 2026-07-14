@@ -18,8 +18,11 @@ fastApi/
 │   │   ├── limiter.py           # rate limiting (slowapi)
 │   │   ├── security_headers.py  # middleware с security-заголовками
 │   │   ├── ip_allowlist.py      # middleware: ограничение доступа по IP (ALLOWED_IPS)
-│   │   ├── db.py                # проверка подключения к PostgreSQL
-│   │   └── redis_client.py      # проверка подключения к Redis
+│   │   ├── db.py                # async engine, пул соединений, сессии SQLAlchemy к PostgreSQL
+│   │   └── redis_client.py      # пул соединений Redis (ConnectionPool)
+│   ├── models/
+│   │   ├── __init__.py
+│   │   └── base.py              # Base (DeclarativeBase) — сюда подключаются модели для Alembic
 │   └── routers/
 │       ├── __init__.py
 │       ├── http/
@@ -44,6 +47,10 @@ fastApi/
 │   ├── docker.md          # настройка и запуск проекта в Docker (prod/dev)
 │   ├── database.md        # подключение к PostgreSQL и /postgre-check
 │   └── redis.md           # подключение к Redis и /redis-check
+├── migrations/             # Alembic: миграции схемы БД
+│   ├── env.py              # конфигурация Alembic (URL и metadata берутся из app/)
+│   └── versions/           # файлы миграций
+├── alembic.ini             # конфигурация Alembic (script_location, логирование)
 ├── pyproject.toml         # настройки Black и mypy
 ├── .flake8                # настройки Flake8
 ├── .pre-commit-config.yaml # хуки: black, flake8, mypy и базовые проверки
@@ -174,6 +181,28 @@ pre-commit run --all-files
 ## 🗄️ База данных
 
 Переменные окружения для подключения к PostgreSQL, эндпоинт `/postgre-check` и диагностика — в [docs/database.md](docs/database.md).
+
+## 🧬 Миграции БД (Alembic)
+
+Схема БД версионируется через [Alembic](https://alembic.sqlalchemy.org/), URL подключения берётся из `.env` через `app.core.config.settings` (см. [migrations/env.py](migrations/env.py)).
+
+Применить все миграции:
+
+```powershell
+alembic upgrade head
+```
+
+Создать новую миграцию (после добавления/изменения моделей в `app/models/`):
+
+```powershell
+alembic revision --autogenerate -m "описание изменения"
+```
+
+Откатить последнюю миграцию:
+
+```powershell
+alembic downgrade -1
+```
 
 ## ⚡ Redis
 

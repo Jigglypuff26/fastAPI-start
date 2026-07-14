@@ -19,8 +19,8 @@ class Settings(BaseSettings):
     cors_headers: list[str] = ["Authorization", "Content-Type"]
 
     # Хосты (заголовок Host), с которыми сервер согласится работать.
-    # "testserver" is the fixed Host Starlette's TestClient sends; needed so
-    # TrustedHostMiddleware doesn't reject requests made by the test suite.
+    # "testserver" — фиксированный Host, который отправляет TestClient из Starlette;
+    # нужен, чтобы TrustedHostMiddleware не отклонял запросы из тестов.
     allowed_hosts: list[str] = ["localhost", "127.0.0.1", "testserver"]
     # IP-адреса или подсети (CIDR), которым разрешён доступ. Пустой список —
     # ограничение отключено (доступ разрешён всем).
@@ -51,13 +51,20 @@ class Settings(BaseSettings):
     redis_password: str = ""
     # Номер логической базы Redis (0-15 по умолчанию).
     redis_db: int = 0
+    # Максимальное число соединений в пуле Redis.
+    redis_max_connections: int = 20
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+
+    # Размер пула соединений SQLAlchemy к PostgreSQL.
+    db_pool_size: int = 10
+    # Число дополнительных соединений сверх db_pool_size при пиковой нагрузке.
+    db_max_overflow: int = 5
 
     @property
     def database_url(self) -> str:
         return (
-            f"postgresql://{self.db_username}:{self.db_password}"
+            f"postgresql+asyncpg://{self.db_username}:{self.db_password}"
             f"@{self.db_host}:{self.db_port}/{self.db_name}"
         )
 

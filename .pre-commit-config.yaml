@@ -21,6 +21,11 @@ repos:
     rev: 7.1.1
     hooks:
       - id: flake8   # настройки берутся из .flake8
+        # pre-commit передаёт flake8 список файлов явно, а .flake8 -> exclude
+        # действует только при рекурсивном обходе директорий, поэтому файлы
+        # миграций (шаблонные op/sa-импорты в пустых revision-скриптах)
+        # исключаем здесь отдельно.
+        exclude: ^migrations/versions/
 
   # mypy — статическая проверка типов (ловит ошибки типов до запуска кода)
   - repo: https://github.com/pre-commit/mirrors-mypy
@@ -29,7 +34,7 @@ repos:
       - id: mypy
         # mypy запускается в изолированном окружении хука, поэтому пакеты проекта
         # нужно продублировать здесь — иначе mypy не увидит их типы (import-not-found)
-        additional_dependencies: [fastapi, pydantic, pydantic-settings, slowapi, redis]
+        additional_dependencies: [fastapi, pydantic, pydantic-settings, slowapi, redis, "sqlalchemy[asyncio]"]
         # не передавать хуку измененные файлы поштучно — вместо этого используем args ниже.
         # Это нужно, чтобы mypy анализировал весь пакет app целиком (видел все зависимости
         # между модулями), а не только изменённые файлы по отдельности
