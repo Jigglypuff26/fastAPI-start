@@ -17,13 +17,15 @@ fastApi/
 │   │   ├── env.py               # ensure_env_file — создание .env из .env.example
 │   │   ├── limiter.py           # rate limiting (slowapi)
 │   │   ├── security_headers.py  # middleware с security-заголовками
-│   │   └── db.py                # проверка подключения к PostgreSQL
+│   │   ├── db.py                # проверка подключения к PostgreSQL
+│   │   └── redis_client.py      # проверка подключения к Redis
 │   └── routers/
 │       ├── __init__.py
 │       ├── http/
 │       │   ├── __init__.py
 │       │   ├── root.py    # роутер с эндпоинтом /
-│       │   └── postgre.py # роутер с эндпоинтом /postgre-check
+│       │   ├── postgre.py # роутер с эндпоинтом /postgre-check
+│       │   └── redis.py   # роутер с эндпоинтом /redis-check
 │       └── ws/
 │           ├── __init__.py
 │           └── echo.py    # WebSocket-эхо на /ws
@@ -39,7 +41,8 @@ fastApi/
 ├── docs/
 │   ├── security.md        # что настроено по безопасности и где в коде
 │   ├── docker.md          # настройка и запуск проекта в Docker (prod/dev)
-│   └── database.md        # подключение к PostgreSQL и /postgre-check
+│   ├── database.md        # подключение к PostgreSQL и /postgre-check
+│   └── redis.md           # подключение к Redis и /redis-check
 ├── pyproject.toml         # настройки Black и mypy
 ├── .flake8                # настройки Flake8
 ├── .pre-commit-config.yaml # хуки: black, flake8, mypy и базовые проверки
@@ -170,6 +173,10 @@ pre-commit run --all-files
 
 Переменные окружения для подключения к PostgreSQL, эндпоинт `/postgre-check` и диагностика — в [docs/database.md](docs/database.md).
 
+## Redis
+
+Переменные окружения для подключения к Redis, запуск Redis через Docker, эндпоинт `/redis-check` и диагностика — в [docs/redis.md](docs/redis.md).
+
 ## Эндпоинты
 
 ### `GET /`
@@ -193,6 +200,18 @@ pre-commit run --all-files
 ```json
 {
   "message": "подключен к базе"
+}
+```
+
+### `GET /redis-check`
+
+Проверяет подключение к Redis. Подробности — в [docs/redis.md](docs/redis.md).
+
+**Ответ:**
+
+```json
+{
+  "message": "подключен к redis"
 }
 ```
 

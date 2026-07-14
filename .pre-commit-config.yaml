@@ -29,7 +29,7 @@ repos:
       - id: mypy
         # mypy запускается в изолированном окружении хука, поэтому пакеты проекта
         # нужно продублировать здесь — иначе mypy не увидит их типы (import-not-found)
-        additional_dependencies: [fastapi, pydantic, pydantic-settings, slowapi]
+        additional_dependencies: [fastapi, pydantic, pydantic-settings, slowapi, redis]
         # не передавать хуку измененные файлы поштучно — вместо этого используем args ниже.
         # Это нужно, чтобы mypy анализировал весь пакет app целиком (видел все зависимости
         # между модулями), а не только изменённые файлы по отдельности

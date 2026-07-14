@@ -53,6 +53,12 @@ docker run -p 8000:8000 --env-file .env fastapi-project
 
 Подробнее про переменные подключения и диагностику — в [docs/database.md](database.md).
 
+### Redis
+
+В отличие от Postgres, Redis поднимается прямо в `docker-compose.yml` как сервис `redis` (образ `redis:7-alpine`, данные — в volume `redis-data`, порт `6379` проброшен на хост). Сервис `api` подключается к нему по имени сервиса — `REDIS_HOST=redis` переопределяется в секции `environment` (аналогично `DB_HOST`), и стартует только после того, как у `redis` пройдёт healthcheck (`depends_on: redis: condition: service_healthy`).
+
+Подробнее про переменные подключения и диагностику — в [docs/redis.md](redis.md).
+
 ## Остановка
 
 ```powershell
