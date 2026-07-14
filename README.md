@@ -1,8 +1,8 @@
-# FastAPI Boilerplate
+# 🚀 FastAPI Boilerplate
 
-## Описание проекта
+## 📖 Описание проекта
 
-Boilerplate-проект на [FastAPI](https://fastapi.tiangolo.com/) для быстрого старта разработки бэкенд-сервисов. Содержит готовую базовую структуру, поверх которой можно сразу начинать писать бизнес-логику: роутеры, конфигурация через переменные окружения, обработка ошибок, CORS, тесты и Docker.
+Boilerplate-проект на [FastAPI](https://fastapi.tiangolo.com/) для быстрого старта разработки бэкенд-сервисов. Содержит готовую базовую структуру, поверх которой можно сразу начинать писать бизнес-логику: роутеры, конфигурация через переменные окружения, обработка ошибок, CORS, подключение к PostgreSQL и Redis, тесты и Docker.
 
 Структура проекта:
 
@@ -17,13 +17,15 @@ fastApi/
 │   │   ├── env.py               # ensure_env_file — создание .env из .env.example
 │   │   ├── limiter.py           # rate limiting (slowapi)
 │   │   ├── security_headers.py  # middleware с security-заголовками
-│   │   └── db.py                # проверка подключения к PostgreSQL
+│   │   ├── db.py                # проверка подключения к PostgreSQL
+│   │   └── redis_client.py      # проверка подключения к Redis
 │   └── routers/
 │       ├── __init__.py
 │       ├── http/
 │       │   ├── __init__.py
 │       │   ├── root.py    # роутер с эндпоинтом /
-│       │   └── postgre.py # роутер с эндпоинтом /postgre-check
+│       │   ├── postgre.py # роутер с эндпоинтом /postgre-check
+│       │   └── redis.py   # роутер с эндпоинтом /redis-check
 │       └── ws/
 │           ├── __init__.py
 │           └── echo.py    # WebSocket-эхо на /ws
@@ -39,7 +41,8 @@ fastApi/
 ├── docs/
 │   ├── security.md        # что настроено по безопасности и где в коде
 │   ├── docker.md          # настройка и запуск проекта в Docker (prod/dev)
-│   └── database.md        # подключение к PostgreSQL и /postgre-check
+│   ├── database.md        # подключение к PostgreSQL и /postgre-check
+│   └── redis.md           # подключение к Redis и /redis-check
 ├── pyproject.toml         # настройки Black и mypy
 ├── .flake8                # настройки Flake8
 ├── .pre-commit-config.yaml # хуки: black, flake8, mypy и базовые проверки
@@ -47,14 +50,15 @@ fastApi/
 ├── docker/
 │   ├── Dockerfile.prod          # prod-образ: non-root, без reload
 │   ├── Dockerfile.dev           # dev-образ: reload, dev-зависимости
-│   ├── docker-compose.yml       # prod-стек
-│   └── docker-compose.dev.yml   # dev-оверрайд (volume, DEBUG=true)
+│   ├── docker-compose.yml       # prod-стек (без Redis)
+│   ├── docker-compose.dev.yml   # dev-оверрайд (volume, DEBUG=true)
+│   └── docker-compose.redis.yml # опциональный оверрайд: поднимает сервис redis
 ├── .dockerignore
 ├── .gitignore
 └── README.md
 ```
 
-## Установка зависимостей
+## 📦 Установка зависимостей
 
 1. Создать виртуальное окружение (если ещё не создано):
 
@@ -82,7 +86,7 @@ fastApi/
 
 4. `.env` создаётся автоматически из `.env.example` при первом запуске приложения (см. `app/core/config.py` и `app/core/env.py`), если файла ещё нет. Существующий `.env` при этом не перезаписывается. При необходимости отредактируйте значения в `.env` после его создания.
 
-## Запуск проекта
+## ▶️ Запуск проекта
 
 ```powershell
 uvicorn app.main:app --reload
@@ -92,11 +96,11 @@ uvicorn app.main:app --reload
 
 Документация API (Swagger): [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
-### Запуск через Docker
+### 🐳 Запуск через Docker
 
 Настройка и запуск в Docker (prod и dev) — в [docs/docker.md](docs/docker.md).
 
-## Остановка проекта
+## ⏹️ Остановка проекта
 
 Если сервер запущен в текущем терминале — нажать `Ctrl+C`.
 
@@ -106,13 +110,13 @@ uvicorn app.main:app --reload
 Get-NetTCPConnection -LocalPort 8000 -State Listen | Select-Object -ExpandProperty OwningProcess | ForEach-Object { Stop-Process -Id $_ -Force }
 ```
 
-## Тесты
+## 🧪 Тесты
 
 ```powershell
 pytest
 ```
 
-## Форматирование и линтинг
+## 🧹 Форматирование и линтинг
 
 Форматирование кода — [Black](https://black.readthedocs.io/), линтинг — [Flake8](https://flake8.pycqa.org/) (настройки в `pyproject.toml` и `.flake8`).
 
@@ -146,7 +150,7 @@ flake8
 mypy app
 ```
 
-### Pre-commit hooks
+### 🪝 Pre-commit hooks
 
 Black, Flake8, mypy и базовые проверки (trailing whitespace, конфликты слияния и т.д.) запускаются автоматически перед каждым коммитом через [pre-commit](https://pre-commit.com/) (настройки в `.pre-commit-config.yaml`).
 
@@ -162,17 +166,21 @@ pre-commit install
 pre-commit run --all-files
 ```
 
-## Безопасность
+## 🔒 Безопасность
 
 Обзор настроенных мер базовой безопасности (CORS, security-заголовки, скрытие Swagger в продакшене, TrustedHost, rate limiting) и того, где они находятся в коде — в [docs/security.md](docs/security.md).
 
-## База данных
+## 🗄️ База данных
 
 Переменные окружения для подключения к PostgreSQL, эндпоинт `/postgre-check` и диагностика — в [docs/database.md](docs/database.md).
 
+## ⚡ Redis
+
+Переменные окружения для подключения к Redis, запуск Redis через Docker, эндпоинт `/redis-check` и диагностика — в [docs/redis.md](docs/redis.md).
+
 ## Эндпоинты
 
-### `GET /`
+### 👋 `GET /`
 
 Возвращает приветственное сообщение.
 
@@ -184,7 +192,7 @@ pre-commit run --all-files
 }
 ```
 
-### `GET /postgre-check`
+### 🗄️ `GET /postgre-check`
 
 Проверяет подключение к PostgreSQL. Подробности — в [docs/database.md](docs/database.md).
 
@@ -196,11 +204,23 @@ pre-commit run --all-files
 }
 ```
 
-### `WS /ws`
+### ⚡ `GET /redis-check`
+
+Проверяет подключение к Redis. Подробности — в [docs/redis.md](docs/redis.md).
+
+**Ответ:**
+
+```json
+{
+  "message": "подключен к redis"
+}
+```
+
+### 🔌 `WS /ws`
 
 WebSocket-эхо: отправленное сообщение возвращается обратно тем же текстом. При `DEBUG=true` доступна тестовая HTML-страница на `GET /ws/test`.
 
-## Как добавить новый эндпоинт
+## ➕ Как добавить новый эндпоинт
 
 1. Создайте роутер в `app/routers/http/` (для HTTP) или `app/routers/ws/` (для WebSocket), например `app/routers/http/items.py`:
 
@@ -249,3 +269,7 @@ WebSocket-эхо: отправленное сообщение возвращае
    ```
 
 5. Опишите новый эндпоинт в разделе [Эндпоинты](#эндпоинты) этого README.
+
+## 💬 От автора
+
+Этот проект разрабатывался исходя из личного опыта — как удобный стартовый набор для собственных задач. Дорабатывайте и меняйте как считаете нужным, и если не трудно — поставьте ⭐ репозиторию, если он оказался полезен.

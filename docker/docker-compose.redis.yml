@@ -1,0 +1,27 @@
+services:
+  api:
+    environment:
+      # Redis поднимается как сервис в этом же compose-стеке, поэтому
+      # доступен по имени сервиса "redis" во внутренней docker-сети.
+      - REDIS_HOST=redis
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    container_name: fastapi-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      start_period: 5s
+      retries: 5
+
+volumes:
+  redis-data:
