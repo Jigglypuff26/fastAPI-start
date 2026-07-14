@@ -11,6 +11,10 @@ services:
     env_file:
       - path: ../.env
         required: false
+    environment:
+      # Хост-машина недоступна по "localhost" изнутри контейнера — только
+      # через специальный DNS-алиас Docker Desktop.
+      - DB_HOST=host.docker.internal
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
