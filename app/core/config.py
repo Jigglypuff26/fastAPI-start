@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     # Лимит запросов с одного IP, формат "<число>/<период>" (100/minute и т.п.).
     rate_limit: str = "100/minute"
 
+    # Уровень логирования (DEBUG, INFO, WARNING, ERROR, CRITICAL).
+    log_level: str = "INFO"
+
     # Включает/выключает подключение к PostgreSQL (/postgre-check).
     db_enabled: bool = True
     # Хост базы данных.

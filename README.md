@@ -2,7 +2,7 @@
 
 ## 📖 Описание проекта
 
-Boilerplate-проект на [FastAPI](https://fastapi.tiangolo.com/) для быстрого старта разработки бэкенд-сервисов. Содержит готовую базовую структуру, поверх которой можно сразу начинать писать бизнес-логику: роутеры, конфигурация через переменные окружения, обработка ошибок, CORS, подключение к PostgreSQL и Redis, тесты и Docker.
+Boilerplate-проект на [FastAPI](https://fastapi.tiangolo.com/) для быстрого старта разработки бэкенд-сервисов. Содержит готовую базовую структуру, поверх которой можно сразу начинать писать бизнес-логику: роутеры, конфигурация через переменные окружения, логирование, обработка ошибок, CORS, подключение к PostgreSQL и Redis, тесты и Docker.
 
 Структура проекта:
 
@@ -18,6 +18,9 @@ fastApi/
 │   │   ├── limiter.py           # rate limiting (slowapi)
 │   │   ├── security_headers.py  # middleware с security-заголовками
 │   │   ├── ip_allowlist.py      # middleware: ограничение доступа по IP (ALLOWED_IPS)
+│   │   ├── logging.py           # JSON-логирование, request_id в каждой записи лога
+│   │   ├── request_logging.py   # middleware: request_id + лог завершения запроса
+│   │   ├── error_handlers.py    # единый JSON-формат ответа об ошибке
 │   │   ├── db.py                # async engine, пул соединений, сессии SQLAlchemy к PostgreSQL
 │   │   └── redis_client.py      # пул соединений Redis (ConnectionPool)
 │   ├── models/
@@ -37,7 +40,9 @@ fastApi/
 │   ├── __init__.py
 │   ├── test_root.py       # тесты на GET /
 │   ├── test_rate_limit.py # тесты на rate limiting (slowapi, 429 при превышении)
-│   └── test_ws_echo.py    # тесты на WebSocket /ws
+│   ├── test_ws_echo.py    # тесты на WebSocket /ws
+│   ├── test_logging.py         # тесты на request_id и лог завершения запроса
+│   └── test_error_handling.py  # тесты на единый JSON-формат ответа об ошибке
 ├── venv/                  # виртуальное окружение (в git не попадает)
 ├── requirements.txt       # зависимости для запуска
 ├── requirements-dev.txt   # зависимости для разработки (тесты, линтинг и т.д.)
@@ -47,7 +52,9 @@ fastApi/
 │   ├── security.md        # что настроено по безопасности и где в коде
 │   ├── docker.md          # настройка и запуск проекта в Docker (prod/dev)
 │   ├── database.md        # подключение к PostgreSQL и /postgre-check
-│   └── redis.md           # подключение к Redis и /redis-check
+│   ├── redis.md           # подключение к Redis и /redis-check
+│   ├── logging.md         # формат логов, request_id, LOG_LEVEL
+│   └── errors.md          # единый JSON-формат ответа об ошибке
 ├── migrations/             # Alembic: миграции схемы БД
 │   ├── env.py              # конфигурация Alembic (URL и metadata берутся из app/)
 │   └── versions/           # файлы миграций
@@ -209,6 +216,14 @@ alembic downgrade -1
 ## ⚡ Redis
 
 Переменные окружения для подключения к Redis, запуск Redis через Docker, эндпоинт `/redis-check` и диагностика — в [docs/redis.md](docs/redis.md).
+
+## 📝 Логирование
+
+Структурированные JSON-логи, request_id на каждый запрос (заголовок `X-Request-ID`), уровень логирования через `LOG_LEVEL` — в [docs/logging.md](docs/logging.md).
+
+## ⚠️ Обработка ошибок
+
+Единый JSON-формат ответа для HTTP-ошибок, ошибок валидации и необработанных исключений — в [docs/errors.md](docs/errors.md).
 
 ## Эндпоинты
 

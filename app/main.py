@@ -1,21 +1,31 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import settings
 from app.core.db import engine
+from app.core.error_handlers import (
+    http_exception_handler,
+    unhandled_exception_handler,
+    validation_exception_handler,
+)
 from app.core.ip_allowlist import IPAllowlistMiddleware
 from app.core.limiter import limiter
+from app.core.logging import configure_logging
 from app.core.redis_client import redis_pool
+from app.core.request_logging import RequestIdMiddleware
 from app.core.security_headers import SecurityHeadersMiddleware
 from app.routers.http import postgre, redis, root
 from app.routers.ws import echo
+
+configure_logging(settings.log_level)
 
 
 @asynccontextmanager
@@ -52,12 +62,18 @@ app.add_middleware(
 )
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts)
 app.add_middleware(IPAllowlistMiddleware, allowed_ips=settings.allowed_ips)
+# Добавлен последним из всех — значит, оборачивает все остальные middleware и
+# выполняется первым: request_id и лог доступа есть даже у запросов,
+# отклонённых IPAllowlistMiddleware/TrustedHostMiddleware.
+app.add_middleware(RequestIdMiddleware)
 
-
-@app.exception_handler(Exception)
-async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
-
+app.add_exception_handler(
+    StarletteHTTPException, http_exception_handler  # type: ignore[arg-type]
+)
+app.add_exception_handler(
+    RequestValidationError, validation_exception_handler  # type: ignore[arg-type]
+)
+app.add_exception_handler(Exception, unhandled_exception_handler)
 
 app.include_router(root.router)
 app.include_router(postgre.router)
