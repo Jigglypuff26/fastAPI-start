@@ -7,7 +7,7 @@
 Логи пишутся в stdout одной JSON-строкой на запись — так их проще собирать и парсить агрегаторами логов (ELK, Loki, CloudWatch и т.п.), чем произвольный текстовый вывод. Пример строки:
 
 ```json
-{"timestamp": "2026-07-16T12:00:00+0000", "level": "INFO", "logger": "app.request", "message": "GET / 200 3.42ms", "request_id": "b6b6a9b0-...", "method": "GET", "path": "/", "status_code": 200, "duration_ms": 3.42, "client_ip": "127.0.0.1"}
+{"timestamp": "2026-07-16T12:00:00+0000", "level": "INFO", "logger": "app.request", "message": "GET /api/v1/healthcheck 200 3.42ms", "request_id": "b6b6a9b0-...", "method": "GET", "path": "/api/v1/healthcheck", "status_code": 200, "duration_ms": 3.42, "client_ip": "127.0.0.1"}
 ```
 
 Настроено в [app/core/logging.py](../app/core/logging.py), уровень логирования задаётся `LOG_LEVEL` в `.env` (по умолчанию `INFO`). Вызывается один раз при импорте [app/main.py](../app/main.py), до создания FastAPI-приложения.

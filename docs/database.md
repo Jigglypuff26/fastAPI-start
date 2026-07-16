@@ -45,7 +45,7 @@ async def list_items(db: AsyncSession = Depends(get_db)) -> list[str]:
 
 ## ✅ Проверка подключения
 
-Эндпоинт `GET /postgre-check` пытается подключиться к базе (через пул) и выполнить `SELECT 1`:
+Эндпоинт `GET /api/v1/postgre-check` пытается подключиться к базе (через пул) и выполнить `SELECT 1`:
 
 - `{"message": "подключен к базе"}` — соединение установлено.
 - `{"message": "не подключен к базе"}` — соединение не удалось (неверные креды, БД недоступна, база не существует и т.п.).
@@ -62,7 +62,7 @@ async def list_items(db: AsyncSession = Depends(get_db)) -> list[str]:
 
 ```powershell
 uvicorn app.main:app --reload
-curl http://127.0.0.1:8000/postgre-check
+curl http://127.0.0.1:8000/api/v1/postgre-check
 ```
 
 ## 🐳 Запуск в Docker
@@ -73,7 +73,7 @@ curl http://127.0.0.1:8000/postgre-check
 
 ## 🔍 Диагностика
 
-Если `/postgre-check` возвращает «не подключен к базе»:
+Если `/api/v1/postgre-check` возвращает «не подключен к базе»:
 
 1. Проверить, что PostgreSQL действительно запущен и слушает указанный `DB_HOST:DB_PORT`.
 2. Проверить `DB_USERNAME`/`DB_PASSWORD`/`DB_NAME` — опечатка в любом из них тоже даёт «не подключен».

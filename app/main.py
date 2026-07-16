@@ -22,7 +22,7 @@ from app.core.logging import configure_logging
 from app.core.redis_client import redis_pool
 from app.core.request_logging import RequestIdMiddleware
 from app.core.security_headers import SecurityHeadersMiddleware
-from app.routers.http import postgre, redis, root
+from app.routers.http import healthcheck, postgre, redis
 from app.routers.ws import echo
 
 configure_logging(settings.log_level)
@@ -49,9 +49,13 @@ app.add_exception_handler(
     RateLimitExceeded, _rate_limit_exceeded_handler  # type: ignore[arg-type]
 )
 
-# Middleware применяются в порядке, обратном регистрации, поэтому
-# IPAllowlistMiddleware и TrustedHostMiddleware (добавлены последними) отклоняют
-# некорректные запросы раньше, чем выполнится любая другая работа.
+# Middleware применяются в порядке, обратном регистрации — каждый следующий
+# add_middleware оборачивает предыдущие снаружи и выполняется раньше них.
+# Поэтому TrustedHostMiddleware и IPAllowlistMiddleware (добавлены позже
+# SecurityHeaders/CORS) отклоняют некорректные запросы раньше, чем выполнится
+# остальная работа, а RequestIdMiddleware (добавлен последним из всех) —
+# самый внешний и выполняется первым: request_id и лог доступа есть даже у
+# запросов, отклонённых IPAllowlistMiddleware/TrustedHostMiddleware.
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
@@ -62,9 +66,6 @@ app.add_middleware(
 )
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts)
 app.add_middleware(IPAllowlistMiddleware, allowed_ips=settings.allowed_ips)
-# Добавлен последним из всех — значит, оборачивает все остальные middleware и
-# выполняется первым: request_id и лог доступа есть даже у запросов,
-# отклонённых IPAllowlistMiddleware/TrustedHostMiddleware.
 app.add_middleware(RequestIdMiddleware)
 
 app.add_exception_handler(
@@ -75,7 +76,9 @@ app.add_exception_handler(
 )
 app.add_exception_handler(Exception, unhandled_exception_handler)
 
-app.include_router(root.router)
+# Все роутеры версионируются через APIRouter(prefix="/api/v1", tags=[...])
+# в самом роутере, включая healthcheck — см. app/routers/http/healthcheck.py.
+app.include_router(healthcheck.router)
 app.include_router(postgre.router)
 app.include_router(redis.router)
 app.include_router(echo.router)

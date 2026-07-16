@@ -4,7 +4,7 @@ from app.core.config import settings
 from app.core.limiter import limiter
 from app.core.redis_client import check_redis_connection
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1", tags=["redis"])
 ROOT_PATH = "/redis-check"
 
 

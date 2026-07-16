@@ -8,6 +8,9 @@ Boilerplate-проект на [FastAPI](https://fastapi.tiangolo.com/) для б
 
 ```
 fastApi/
+├── .github/
+│   └── workflows/
+│       └── ci.yml          # CI: lint (black/flake8/mypy) + pytest, только на pull request в main
 ├── app/
 │   ├── __init__.py
 │   ├── main.py            # создание приложения, CORS, обработка ошибок, подключение роутеров
@@ -30,17 +33,18 @@ fastApi/
 │       ├── __init__.py
 │       ├── http/
 │       │   ├── __init__.py
-│       │   ├── root.py    # роутер с эндпоинтом /
-│       │   ├── postgre.py # роутер с эндпоинтом /postgre-check
-│       │   └── redis.py   # роутер с эндпоинтом /redis-check
+│       │   ├── healthcheck.py # роутер с эндпоинтом /api/v1/healthcheck
+│       │   ├── postgre.py     # роутер с эндпоинтом /api/v1/postgre-check
+│       │   └── redis.py       # роутер с эндпоинтом /api/v1/redis-check
 │       └── ws/
 │           ├── __init__.py
-│           └── echo.py    # WebSocket-эхо на /ws
+│           └── echo.py    # WebSocket-эхо на /api/v1/ws
 ├── tests/
 │   ├── __init__.py
-│   ├── test_root.py       # тесты на GET /
-│   ├── test_rate_limit.py # тесты на rate limiting (slowapi, 429 при превышении)
-│   ├── test_ws_echo.py    # тесты на WebSocket /ws
+│   ├── test_healthcheck.py  # тесты на GET /api/v1/healthcheck
+│   ├── test_rate_limit.py   # тесты на rate limiting (slowapi, 429 при превышении)
+│   ├── test_ip_allowlist.py # тесты на middleware ограничения доступа по IP
+│   ├── test_ws_echo.py      # тесты на WebSocket /api/v1/ws
 │   ├── test_logging.py         # тесты на request_id и лог завершения запроса
 │   └── test_error_handling.py  # тесты на единый JSON-формат ответа об ошибке
 ├── venv/                  # виртуальное окружение (в git не попадает)
@@ -54,7 +58,8 @@ fastApi/
 │   ├── database.md        # подключение к PostgreSQL и /postgre-check
 │   ├── redis.md           # подключение к Redis и /redis-check
 │   ├── logging.md         # формат логов, request_id, LOG_LEVEL
-│   └── errors.md          # единый JSON-формат ответа об ошибке
+│   ├── errors.md          # единый JSON-формат ответа об ошибке
+│   └── ci.md              # что и когда проверяет CI
 ├── migrations/             # Alembic: миграции схемы БД
 │   ├── env.py              # конфигурация Alembic (URL и metadata берутся из app/)
 │   └── versions/           # файлы миграций
@@ -225,21 +230,29 @@ alembic downgrade -1
 
 Единый JSON-формат ответа для HTTP-ошибок, ошибок валидации и необработанных исключений — в [docs/errors.md](docs/errors.md).
 
+## 🤖 CI
+
+Lint (Black, Flake8, mypy) и тесты гоняются в GitHub Actions только на pull request в `main` — подробности в [docs/ci.md](docs/ci.md).
+
+## 🔢 Версионирование API
+
+Каждый HTTP/WS-роутер объявляет `APIRouter(prefix="/api/v1", tags=[...])` — так у каждого домена свой раздел в Swagger (по тегу) и общий версионированный префикс, который можно один раз увеличить (`/api/v2`) при breaking change, не трогая остальные роутеры. Единой конвенции без исключений: даже `/healthcheck`, который обычно опрашивают liveness/readiness-пробы, версионируется наравне со всем остальным (см. `HEALTHCHECK` в [docker/Dockerfile.prod](docker/Dockerfile.prod) — он уже ходит по `/api/v1/healthcheck`).
+
 ## Эндпоинты
 
-### 👋 `GET /`
+### 💓 `GET /api/v1/healthcheck`
 
-Возвращает приветственное сообщение.
+Проверка живости приложения (используется в Docker `HEALTHCHECK`, см. [docs/docker.md](docs/docker.md)).
 
 **Ответ:**
 
 ```json
 {
-  "message": "hellow fastapi"
+  "status": "ok"
 }
 ```
 
-### 🗄️ `GET /postgre-check`
+### 🗄️ `GET /api/v1/postgre-check`
 
 Проверяет подключение к PostgreSQL. Подробности — в [docs/database.md](docs/database.md).
 
@@ -251,7 +264,7 @@ alembic downgrade -1
 }
 ```
 
-### ⚡ `GET /redis-check`
+### ⚡ `GET /api/v1/redis-check`
 
 Проверяет подключение к Redis. Подробности — в [docs/redis.md](docs/redis.md).
 
@@ -263,18 +276,18 @@ alembic downgrade -1
 }
 ```
 
-### 🔌 `WS /ws`
+### 🔌 `WS /api/v1/ws`
 
-WebSocket-эхо: отправленное сообщение возвращается обратно тем же текстом. При `DEBUG=true` доступна тестовая HTML-страница на `GET /ws/test`.
+WebSocket-эхо: отправленное сообщение возвращается обратно тем же текстом. При `DEBUG=true` доступна тестовая HTML-страница на `GET /api/v1/ws/test`.
 
 ## ➕ Как добавить новый эндпоинт
 
-1. Создайте роутер в `app/routers/http/` (для HTTP) или `app/routers/ws/` (для WebSocket), например `app/routers/http/items.py`:
+1. Создайте роутер в `app/routers/http/` (для HTTP) или `app/routers/ws/` (для WebSocket), например `app/routers/http/items.py`. Следуйте конвенции версионирования из раздела выше — `prefix="/api/v1/..."`:
 
    ```python
    from fastapi import APIRouter
 
-   router = APIRouter(prefix="/items", tags=["items"])
+   router = APIRouter(prefix="/api/v1/items", tags=["items"])
 
 
    @router.get("/")
@@ -292,7 +305,7 @@ WebSocket-эхо: отправленное сообщение возвращае
 
    Если у эндпоинта нужен rate limiting — навесьте `@limiter.limit(settings.rate_limit)` явно (см. [docs/security.md](docs/security.md) про особенности `SlowAPIMiddleware` в этом проекте).
 
-3. Добавьте тесты в `tests/` (по аналогии с `tests/test_root.py`), например `tests/test_items.py`:
+3. Добавьте тесты в `tests/` (по аналогии с `tests/test_healthcheck.py`), например `tests/test_items.py`:
 
    ```python
    from fastapi.testclient import TestClient
@@ -303,7 +316,7 @@ WebSocket-эхо: отправленное сообщение возвращае
 
 
    def test_list_items() -> None:
-       response = client.get("/items/")
+       response = client.get("/api/v1/items/")
 
        assert response.status_code == 200
        assert response.json() == []
