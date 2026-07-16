@@ -4,7 +4,7 @@ from app.core.config import settings
 from app.core.db import check_postgres_connection
 from app.core.limiter import limiter
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1", tags=["database"])
 ROOT_PATH = "/postgre-check"
 
 

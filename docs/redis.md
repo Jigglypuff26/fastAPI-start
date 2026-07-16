@@ -37,7 +37,7 @@ async def cached(redis: Redis = Depends(get_redis)) -> dict[str, str | None]:
 
 ## ✅ Проверка подключения
 
-Эндпоинт `GET /redis-check` пытается подключиться к Redis (через пул) и выполнить `PING`:
+Эндпоинт `GET /api/v1/redis-check` пытается подключиться к Redis (через пул) и выполнить `PING`:
 
 - `{"message": "подключен к redis"}` — соединение установлено.
 - `{"message": "не подключен к redis"}` — соединение не удалось (неверные креды, Redis недоступен и т.п.).
@@ -67,12 +67,12 @@ docker compose -f docker/docker-compose.yml -f docker/docker-compose.redis.yml u
 ```powershell
 docker run -d --name redis -p 6379:6379 redis:7-alpine
 uvicorn app.main:app --reload
-curl http://127.0.0.1:8000/redis-check
+curl http://127.0.0.1:8000/api/v1/redis-check
 ```
 
 ## 🔍 Диагностика
 
-Если `/redis-check` возвращает «не подключен к redis»:
+Если `/api/v1/redis-check` возвращает «не подключен к redis»:
 
 1. Проверить, что контейнер `redis` вообще поднят и здоров: `docker compose -f docker/docker-compose.yml -f docker/docker-compose.redis.yml ps` (без `-f docker/docker-compose.redis.yml` контейнер не создаётся вовсе).
 2. Проверить `REDIS_HOST`/`REDIS_PORT`/`REDIS_PASSWORD`/`REDIS_DB` в `.env`.

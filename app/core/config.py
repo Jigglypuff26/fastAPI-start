@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     # Уровень логирования (DEBUG, INFO, WARNING, ERROR, CRITICAL).
     log_level: str = "INFO"
 
-    # Включает/выключает подключение к PostgreSQL (/postgre-check).
+    # Включает/выключает подключение к PostgreSQL (/api/v1/postgre-check).
     db_enabled: bool = True
     # Хост базы данных.
     db_host: str = "localhost"
@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     # Название базы данных.
     db_name: str = "postgres"
 
-    # Включает/выключает подключение к Redis (/redis-check).
+    # Включает/выключает подключение к Redis (/api/v1/redis-check).
     redis_enabled: bool = True
     # Хост Redis.
     redis_host: str = "localhost"
