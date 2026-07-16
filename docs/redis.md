@@ -13,12 +13,31 @@
 | `REDIS_PORT`     | Порт Redis                                            | `6379`      |
 | `REDIS_PASSWORD` | Пароль (пусто — без аутентификации)                   | —           |
 | `REDIS_DB`       | Номер логической базы Redis                           | `0`         |
+| `REDIS_MAX_CONNECTIONS` | Максимум соединений в пуле Redis                | `20`        |
 
 Значения по умолчанию (для локальной разработки) заданы в [.env.example](../.env.example). Реальные значения — в `.env`, который не попадает в git (см. [docs/security.md](security.md#секреты-и-env)).
 
+## 🔌 Пул соединений
+
+[app/core/redis_client.py](../app/core/redis_client.py) создаёт один общий `ConnectionPool` (`redis.asyncio`) на весь процесс приложения — `get_redis()` возвращает клиент, использующий этот пул, вместо того чтобы каждый запрос открывал новое TCP-соединение к Redis:
+
+```python
+from fastapi import Depends
+from redis.asyncio import Redis
+
+from app.core.redis_client import get_redis
+
+
+@router.get("/cached")
+async def cached(redis: Redis = Depends(get_redis)) -> dict[str, str | None]:
+    return {"value": await redis.get("key")}
+```
+
+Пул закрывается при остановке приложения (`lifespan` в [app/main.py](../app/main.py), `redis_pool.disconnect()`).
+
 ## ✅ Проверка подключения
 
-Эндпоинт `GET /redis-check` пытается подключиться к Redis и выполнить `PING`:
+Эндпоинт `GET /redis-check` пытается подключиться к Redis (через пул) и выполнить `PING`:
 
 - `{"message": "подключен к redis"}` — соединение установлено.
 - `{"message": "не подключен к redis"}` — соединение не удалось (неверные креды, Redis недоступен и т.п.).
@@ -26,7 +45,7 @@
 
 Реализация:
 
-- [app/core/redis_client.py](../app/core/redis_client.py) — `check_redis_connection()`, подключается через [redis-py](https://github.com/redis/redis-py) (`redis.asyncio`) с таймаутом 3 секунды, любую ошибку подключения превращает в `False`.
+- [app/core/redis_client.py](../app/core/redis_client.py) — `check_redis_connection()`, использует общий пул через [redis-py](https://github.com/redis/redis-py) (`redis.asyncio`) с таймаутом 3 секунды, любую ошибку подключения превращает в `False`.
 - [app/routers/http/redis.py](../app/routers/http/redis.py) — сам роут.
 
 ## 🐳 Запуск Redis через Docker
